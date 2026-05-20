@@ -3,12 +3,12 @@
 
 SINGLE:
   namespace: ""
-  com_port: "usb-ROBOTIS_OpenRB-150_xxxxxxxx" # REPLACE WITH YOUR ID
+  com_port: "usb-FTDI_USB__-__Serial_Converter_FTATCZ4W-if00-port0"
   num_arm_joints: 7
-  joint_signs: [1, -1, 1, -1, 1, 1, 1]
+  joint_signs: [1, -1, 1, 1, 1, -1, 1]
   gripper: true
-  assembly_offsets: [0.000, 0.000, 3.142, 3.142, 3.142, 4.712, 0.000] # rad
-  gripper_range_rad: [2.00, 3.22]
+  assembly_offsets: [-0.785, 0.0, 3.142, 0.0, 0.0, 0.0, 1.2] # rad
+  gripper_range_rad: [2.211, 3.431]
   # Optional Dynamixel control parameters for all arm joints (+ gripper):
   # Warning: If using the OpenRB-150 instead of the U2D2 communication converter,
   #          do not enable torque until an external 5V power supply is connected to the board's

@@ -1,0 +1,168 @@
+data_collector:
+  ros__parameters:
+    collection_rate_hz: 30.0
+    subscription_queue_size: 1
+    data_root: "data"
+    require_complete_samples: true
+    hdf5_compression: "gzip"
+    writer_queue_size: 8
+    writer_put_timeout_sec: 0.1
+    # Background writer flush cadence. Set either value to 0 to disable that trigger.
+    flush_every_samples: 30
+    flush_every_seconds: 1.0
+
+    # Required fields per entry: topic, type.
+    #
+    # Optional fields:
+    #   dataset: HDF5 dataset/group path. Defaults to the entry name.
+    #   writer:  Specific writer adapter. Defaults from the message type.
+    #   required: Whether this topic must be present before a sample is recorded.
+    topics:
+      cam0_rgb:
+        topic: "/cam0/color/image_raw"
+        type: "sensor_msgs/msg/Image"
+        dataset: "observation/head_camera/rgb"
+        writer: "image_compressed"
+      cam0_depth:
+        topic: "/cam0/depth/image_raw"
+        type: "sensor_msgs/msg/Image"
+        dataset: "observation/head_camera/depth"
+        writer: "image_raw"
+      cam0_pointcloud:
+        topic: "/cam0/depth/points"
+        type: "sensor_msgs/msg/PointCloud2"
+        dataset: "pointcloud"
+        writer: "pointcloud_xyzrgb"
+      cam1_rgb:
+        topic: "/cam1/color/image_raw"
+        type: "sensor_msgs/msg/Image"
+        dataset: "observation/head_camera1/rgb"
+        writer: "image_compressed"
+      cam1_depth:
+        topic: "/cam1/depth/image_raw"
+        type: "sensor_msgs/msg/Image"
+        dataset: "observation/head_camera1/depth"
+        writer: "image_raw"
+      cam1_pointcloud:
+        topic: "/cam1/depth/points"
+        type: "sensor_msgs/msg/PointCloud2"
+        dataset: "pointcloud1"
+        writer: "pointcloud_xyzrgb"
+      robot_joint_state:
+        topic: "/joint_states"
+        type: "sensor_msgs/msg/JointState"
+        dataset: "robot/joint_state"
+      left_hand_action_state:
+        topic: "/cb_left_hand_control_cmd"
+        type: "sensor_msgs/msg/JointState"
+        dataset: "action/hand/left/raw_state"
+        writer: "joint_state"
+        required: false
+      right_hand_action_state:
+        topic: "/cb_right_hand_control_cmd"
+        type: "sensor_msgs/msg/JointState"
+        dataset: "action/hand/right/raw_state"
+        writer: "joint_state"
+        required: false
+      left_hand_obs_state:
+        topic: "/cb_left_hand_state"
+        type: "sensor_msgs/msg/JointState"
+        dataset: "obs/hand/left/raw_state"
+        writer: "joint_state"
+        required: false
+      right_hand_obs_state:
+        topic: "/cb_right_hand_state"
+        type: "sensor_msgs/msg/JointState"
+        dataset: "obs/hand/right/raw_state"
+        writer: "joint_state"
+        required: false
+      left_hand_force:
+        topic: "/cb_left_hand_force"
+        type: "std_msgs/msg/Float32MultiArray"
+        dataset: "obs/hand/left/tactile/force"
+        writer: "float32_multi_array"
+        required: false
+      right_hand_force:
+        topic: "/cb_right_hand_force"
+        type: "std_msgs/msg/Float32MultiArray"
+        dataset: "obs/hand/right/tactile/force"
+        writer: "float32_multi_array"
+        required: false
+      left_hand_matrix_touch:
+        topic: "/cb_left_hand_matrix_touch"
+        type: "std_msgs/msg/String"
+        dataset: "obs/hand/left/tactile/matrix_json"
+        writer: "string"
+        required: false
+      right_hand_matrix_touch:
+        topic: "/cb_right_hand_matrix_touch"
+        type: "std_msgs/msg/String"
+        dataset: "obs/hand/right/tactile/matrix_json"
+        writer: "string"
+        required: false
+      left_hand_matrix_touch_mass:
+        topic: "/cb_left_hand_matrix_touch_mass"
+        type: "std_msgs/msg/String"
+        dataset: "obs/hand/left/tactile/matrix_mass_json"
+        writer: "string"
+        required: false
+      right_hand_matrix_touch_mass:
+        topic: "/cb_right_hand_matrix_touch_mass"
+        type: "std_msgs/msg/String"
+        dataset: "obs/hand/right/tactile/matrix_mass_json"
+        writer: "string"
+        required: false
+      left_hand_matrix_touch_pc:
+        topic: "/cb_left_hand_matrix_touch_pc"
+        type: "sensor_msgs/msg/PointCloud2"
+        dataset: "obs/hand/left/tactile/matrix_pointcloud_cdr"
+        writer: "serialized_cdr"
+        required: false
+      right_hand_matrix_touch_pc:
+        topic: "/cb_right_hand_matrix_touch_pc"
+        type: "sensor_msgs/msg/PointCloud2"
+        dataset: "obs/hand/right/tactile/matrix_pointcloud_cdr"
+        writer: "serialized_cdr"
+        required: false
+      # left_ee_pose:
+      #   topic: "/left/franka_robot_state_broadcaster/current_pose"
+      #   type: "geometry_msgs/msg/PoseStamped"
+      #   dataset: "robot/left/ee_pose"
+      # right_ee_pose:
+      #   topic: "/right/franka_robot_state_broadcaster/current_pose"
+      #   type: "geometry_msgs/msg/PoseStamped"
+      #   dataset: "robot/right/ee_pose"
+      # left_hand_joint_state:
+      #   topic: "/cb_left_hand_state"
+      #   type: "sensor_msgs/msg/JointState"
+      #   dataset: "hand/left/joint_state"
+      # right_hand_joint_state:
+      #   topic: "/cb_right_hand_state"
+      #   type: "sensor_msgs/msg/JointState"
+      #   dataset: "hand/right/joint_state"
+
+    # Topics that are useful metadata and expected to remain stable during an
+    # episode. They are subscribed normally, but only the latest message is saved
+    # once per episode. Static topics default to required: false so this config
+    # can be reused when a launch file does not publish every camera topic.
+    static_topics:
+      cam0_color_camera_info:
+        topic: "/cam0/color/camera_info"
+        type: "sensor_msgs/msg/CameraInfo"
+        dataset: "metadata/cam0/color/camera_info"
+        writer: "camera_info"
+      cam0_depth_camera_info:
+        topic: "/cam0/depth/camera_info"
+        type: "sensor_msgs/msg/CameraInfo"
+        dataset: "metadata/cam0/depth/camera_info"
+        writer: "camera_info"
+      cam1_color_camera_info:
+        topic: "/cam1/color/camera_info"
+        type: "sensor_msgs/msg/CameraInfo"
+        dataset: "metadata/cam1/color/camera_info"
+        writer: "camera_info"
+      cam1_depth_camera_info:
+        topic: "/cam1/depth/camera_info"
+        type: "sensor_msgs/msg/CameraInfo"
+        dataset: "metadata/cam1/depth/camera_info"
+        writer: "camera_info"
