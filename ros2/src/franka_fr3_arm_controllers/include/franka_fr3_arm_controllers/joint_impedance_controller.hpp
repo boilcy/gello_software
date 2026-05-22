@@ -52,6 +52,9 @@ class JointImpedanceController : public controller_interface::ControllerInterfac
   Vector7d k_gains_;
   Vector7d d_gains_;
   double k_alpha_;
+  bool log_tau_commands_{false};
+  int tau_command_log_interval_{100};
+  int tau_command_log_counter_{0};
   bool move_to_start_position_finished_{false};
   bool motion_generator_initialized_{false};
   rclcpp::Time start_time_;
@@ -67,6 +70,7 @@ class JointImpedanceController : public controller_interface::ControllerInterfac
   void updateJointStates_();
   void validateGelloPositions_(const sensor_msgs::msg::JointState& msg);
   void jointStateCallback_(const sensor_msgs::msg::JointState msg);
+  void logTauCommand_(const Vector7d& tau_command, const Vector7d& q_goal);
 };
 
 }  // namespace franka_fr3_arm_controllers

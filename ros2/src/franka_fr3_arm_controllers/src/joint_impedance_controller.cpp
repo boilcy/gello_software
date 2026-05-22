@@ -97,6 +97,7 @@ controller_interface::return_type JointImpedanceController::update(
   for (int i = 0; i < num_joints; ++i) {
     command_interfaces_[i].set_value(tau_d_calculated(i));
   }
+  logTauCommand_(tau_d_calculated, q_goal);
 
   return controller_interface::return_type::OK;
 }
@@ -124,6 +125,8 @@ CallbackReturn JointImpedanceController::on_init() {
     auto_declare<std::string>("arm_id", "");
     auto_declare<std::vector<double>>("k_gains", {});
     auto_declare<std::vector<double>>("d_gains", {});
+    auto_declare<bool>("log_tau_commands", false);
+    auto_declare<int>("tau_command_log_interval", 100);
   } catch (const std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
@@ -145,6 +148,9 @@ CallbackReturn JointImpedanceController::on_configure(
   auto k_gains = get_node()->get_parameter("k_gains").as_double_array();
   auto d_gains = get_node()->get_parameter("d_gains").as_double_array();
   auto k_alpha = get_node()->get_parameter("k_alpha").as_double();
+  log_tau_commands_ = get_node()->get_parameter("log_tau_commands").as_bool();
+  tau_command_log_interval_ =
+      static_cast<int>(get_node()->get_parameter("tau_command_log_interval").as_int());
 
   if (!validateGains_(k_gains, "k_gains") || !validateGains_(d_gains, "d_gains")) {
     return CallbackReturn::FAILURE;
@@ -157,6 +163,11 @@ CallbackReturn JointImpedanceController::on_configure(
 
   if (k_alpha < 0.0 || k_alpha > 1.0) {
     RCLCPP_FATAL(get_node()->get_logger(), "k_alpha should be in the range [0, 1]");
+    return CallbackReturn::FAILURE;
+  }
+
+  if (tau_command_log_interval_ < 1) {
+    RCLCPP_FATAL(get_node()->get_logger(), "tau_command_log_interval should be >= 1");
     return CallbackReturn::FAILURE;
   }
 
@@ -187,6 +198,7 @@ CallbackReturn JointImpedanceController::on_activate(
     const rclcpp_lifecycle::State& /*previous_state*/) {
   last_joint_state_time_ = get_node()->now();
   dq_filtered_.setZero();
+  tau_command_log_counter_ = 0;
   start_time_ = this->get_node()->now();
 
   return CallbackReturn::SUCCESS;
@@ -242,6 +254,22 @@ void JointImpedanceController::updateJointStates_() {
     q_(i) = position_interface.get_value();
     dq_(i) = velocity_interface.get_value();
   }
+}
+
+void JointImpedanceController::logTauCommand_(const Vector7d& tau_command, const Vector7d& q_goal) {
+  if (!log_tau_commands_) {
+    return;
+  }
+
+  if ((tau_command_log_counter_++ % tau_command_log_interval_) != 0) {
+    return;
+  }
+
+  RCLCPP_INFO(get_node()->get_logger(),
+              "tau_command: [%f, %f, %f, %f, %f, %f, %f], q_goal: [%f, %f, %f, %f, %f, %f, %f]",
+              tau_command(0), tau_command(1), tau_command(2), tau_command(3), tau_command(4),
+              tau_command(5), tau_command(6), q_goal(0), q_goal(1), q_goal(2), q_goal(3), q_goal(4),
+              q_goal(5), q_goal(6));
 }
 
 bool JointImpedanceController::initializeMotionGenerator_() {

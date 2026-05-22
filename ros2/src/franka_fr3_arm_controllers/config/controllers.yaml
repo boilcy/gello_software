@@ -15,7 +15,9 @@
 /**:
   joint_impedance_controller:
     ros__parameters:
-      k_alpha: 0.99
+      k_alpha: 0.9
+      log_tau_commands: true
+      tau_command_log_interval: 1000
       k_gains:
         - 240.0
         - 240.0
