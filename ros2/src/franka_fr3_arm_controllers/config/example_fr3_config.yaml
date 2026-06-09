@@ -6,7 +6,7 @@ robot1:
   joint_state_rate: 30
   load_gripper: "false" 
   namespace: ""
-  robot_ip: "172.16.0.3" 
+  robot_ip: "172.16.1.2" 
   urdf_file: "fr3/fr3.urdf.xacro" 
   use_fake_hardware: "false" 
   use_rviz: "false" 

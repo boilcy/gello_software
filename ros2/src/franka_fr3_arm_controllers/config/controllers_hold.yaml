@@ -16,7 +16,7 @@
   joint_impedance_controller:
     ros__parameters:
       k_alpha: 0.9
-      command_mode: gello
+      command_mode: hold
       log_tau_commands: true
       tau_command_log_interval: 2000
       k_gains:

@@ -70,6 +70,8 @@
 ############################################################################
 
 
+import os
+
 import xacro
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -106,9 +108,13 @@ def generate_robot_nodes(context):
     namespace = LaunchConfiguration("namespace").perform(context)
     arm_id = LaunchConfiguration("arm_id").perform(context)
     load_gripper = LaunchConfiguration("load_gripper").perform(context)
-    controllers_yaml = PathJoinSubstitution(
-        [FindPackageShare("franka_fr3_arm_controllers"), "config", "controllers.yaml"]
-    ).perform(context)
+    controllers_config_file = LaunchConfiguration("controllers_config_file").perform(context)
+    if os.path.isabs(controllers_config_file):
+        controllers_yaml = controllers_config_file
+    else:
+        controllers_yaml = PathJoinSubstitution(
+            [FindPackageShare("franka_fr3_arm_controllers"), "config", controllers_config_file]
+        ).perform(context)
 
     joint_sources_str = LaunchConfiguration("joint_sources").perform(context)
     joint_sources = joint_sources_str.split(",")
@@ -232,6 +238,11 @@ def generate_launch_description():
             "joint_state_rate",
             default_value="30",
             description="Rate for joint state publishing (Hz)",
+        ),
+        DeclareLaunchArgument(
+            "controllers_config_file",
+            default_value="controllers.yaml",
+            description="Controller parameter YAML file, relative to config/ or absolute",
         ),
     ]
 

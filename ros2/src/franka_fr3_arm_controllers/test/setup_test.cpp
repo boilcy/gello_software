@@ -97,6 +97,26 @@ TEST_F(JointImpedanceControllerTest, TestUpdateInvalidGelloPositionValues) {
    */
 }
 
+TEST_F(JointImpedanceControllerTest, TestHoldModeHoldsCurrentRobotPosition) {
+  static const std::vector<double> kInitialRobotPosition = {0.4, 0.3, 0.2, 0.1, 0.0, -0.1, -0.2};
+  static const std::vector<double> kInitialRobotVelocity = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  static constexpr double kExpectedValue = 0.0;
+  static constexpr double kTolerance = 0.01;
+
+  setRobotPosition(kInitialRobotPosition);
+  setRobotVelocity(kInitialRobotVelocity);
+  setControllerCommandMode("hold");
+  startController();
+
+  rclcpp::Time time;
+  rclcpp::Duration period = rclcpp::Duration::from_seconds(1.0);
+  EXPECT_EQ(controller_->update(time, period), controller_interface::return_type::OK);
+
+  for (size_t i = 0; i < joint_commands_.size(); ++i) {
+    EXPECT_NEAR(joint_commands_[i], kExpectedValue, kTolerance);
+  }
+}
+
 TEST_F(JointImpedanceControllerTest, TestCommandInterfaceConfiguration) {
   controller_->on_init();
   rclcpp_lifecycle::State state;

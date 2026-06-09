@@ -1,14 +1,13 @@
 # This configuration works with the pre-assembled "Franka GELLO" (single arm) by Franka Robotics GmbH
 # See https://franka.de/documents
 
-SINGLE:
-  namespace: ""
+LEFT:
+  namespace: "left"
   com_port: "usb-FTDI_USB__-__Serial_Converter_FTATCZ4W-if00-port0"
   num_arm_joints: 7
   joint_signs: [1, -1, 1, 1, 1, -1, 1]
   gripper: true
   assembly_offsets: [-0.92, 0.22, 3.342, 0.3, -0.1, 0.13, 0.9] # rad
-  # assembly_offsets: [-0.785, 0.0, 3.142, 0.0, 0.0, 0.0, 1.2] # rad
   gripper_range_rad: [2.26, 3.48]
   # Optional Dynamixel control parameters for all arm joints (+ gripper):
   # Warning: If using the OpenRB-150 instead of the U2D2 communication converter,

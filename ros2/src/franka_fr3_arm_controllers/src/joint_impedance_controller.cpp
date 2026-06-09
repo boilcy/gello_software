@@ -55,6 +55,24 @@ controller_interface::return_type JointImpedanceController::update(
   Vector7d q_goal;
   Vector7d tau_d_calculated;
 
+  if (command_mode_ == "hold") {
+    if (!hold_position_initialized_) {
+      hold_position_ = q_;
+      hold_position_initialized_ = true;
+      RCLCPP_INFO(get_node()->get_logger(),
+                  "Holding current joint position: [%f, %f, %f, %f, %f, %f, %f]", hold_position_(0),
+                  hold_position_(1), hold_position_(2), hold_position_(3), hold_position_(4),
+                  hold_position_(5), hold_position_(6));
+    }
+    q_goal = hold_position_;
+    tau_d_calculated = calculateTauDGains_(q_goal);
+    for (int i = 0; i < num_joints; ++i) {
+      command_interfaces_[i].set_value(tau_d_calculated(i));
+    }
+    logTauCommand_(tau_d_calculated, q_goal);
+    return controller_interface::return_type::OK;
+  }
+
   if (!motion_generator_initialized_) {
     // After starting the controller we wait for valid joint states from the input topic
     // Until we get valid joint states we will send zero torques to the robot
@@ -125,6 +143,7 @@ CallbackReturn JointImpedanceController::on_init() {
     auto_declare<std::string>("arm_id", "");
     auto_declare<std::vector<double>>("k_gains", {});
     auto_declare<std::vector<double>>("d_gains", {});
+    auto_declare<std::string>("command_mode", "gello");
     auto_declare<bool>("log_tau_commands", false);
     auto_declare<int>("tau_command_log_interval", 100);
   } catch (const std::exception& e) {
@@ -148,11 +167,17 @@ CallbackReturn JointImpedanceController::on_configure(
   auto k_gains = get_node()->get_parameter("k_gains").as_double_array();
   auto d_gains = get_node()->get_parameter("d_gains").as_double_array();
   auto k_alpha = get_node()->get_parameter("k_alpha").as_double();
+  command_mode_ = get_node()->get_parameter("command_mode").as_string();
   log_tau_commands_ = get_node()->get_parameter("log_tau_commands").as_bool();
   tau_command_log_interval_ =
       static_cast<int>(get_node()->get_parameter("tau_command_log_interval").as_int());
 
   if (!validateGains_(k_gains, "k_gains") || !validateGains_(d_gains, "d_gains")) {
+    return CallbackReturn::FAILURE;
+  }
+
+  if (command_mode_ != "gello" && command_mode_ != "hold") {
+    RCLCPP_FATAL(get_node()->get_logger(), "command_mode should be either 'gello' or 'hold'");
     return CallbackReturn::FAILURE;
   }
 
@@ -187,9 +212,14 @@ CallbackReturn JointImpedanceController::on_configure(
     RCLCPP_ERROR(get_node()->get_logger(), "Failed to get robot_description parameter.");
   }
 
-  joint_state_subscriber_ = get_node()->create_subscription<sensor_msgs::msg::JointState>(
-      "gello/joint_states", 1,
-      [this](const sensor_msgs::msg::JointState& msg) { jointStateCallback_(msg); });
+  if (command_mode_ == "gello") {
+    joint_state_subscriber_ = get_node()->create_subscription<sensor_msgs::msg::JointState>(
+        "gello/joint_states", 1,
+        [this](const sensor_msgs::msg::JointState& msg) { jointStateCallback_(msg); });
+  } else {
+    RCLCPP_INFO(get_node()->get_logger(),
+                "Joint impedance controller is in hold mode; GELLO input is disabled.");
+  }
 
   return CallbackReturn::SUCCESS;
 }
@@ -199,6 +229,9 @@ CallbackReturn JointImpedanceController::on_activate(
   last_joint_state_time_ = get_node()->now();
   dq_filtered_.setZero();
   tau_command_log_counter_ = 0;
+  hold_position_initialized_ = false;
+  motion_generator_initialized_ = false;
+  move_to_start_position_finished_ = false;
   start_time_ = this->get_node()->now();
 
   return CallbackReturn::SUCCESS;

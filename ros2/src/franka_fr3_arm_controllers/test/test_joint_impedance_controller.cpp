@@ -102,7 +102,17 @@ void JointImpedanceControllerTest::setRobotPosition(const std::vector<double>& p
   }
 }
 
+void JointImpedanceControllerTest::setRobotVelocity(const std::vector<double>& velocities) {
+  for (size_t i = 0; i < velocities.size(); ++i) {
+    velocity_states_[i] = velocities[i];
+  }
+}
+
 void JointImpedanceControllerTest::setValidControllerParameters() {
   controller_->get_node()->set_parameters(
       {{"arm_id", kArmId_}, {"k_gains", kKGains_}, {"d_gains", kDGains_}, {"k_alpha", kKAlpha_}});
+}
+
+void JointImpedanceControllerTest::setControllerCommandMode(const std::string& command_mode) {
+  controller_->get_node()->set_parameter(rclcpp::Parameter("command_mode", command_mode));
 }

@@ -52,9 +52,12 @@ class JointImpedanceController : public controller_interface::ControllerInterfac
   Vector7d k_gains_;
   Vector7d d_gains_;
   double k_alpha_;
+  std::string command_mode_{"gello"};
   bool log_tau_commands_{false};
   int tau_command_log_interval_{100};
   int tau_command_log_counter_{0};
+  bool hold_position_initialized_{false};
+  Vector7d hold_position_;
   bool move_to_start_position_finished_{false};
   bool motion_generator_initialized_{false};
   rclcpp::Time start_time_;

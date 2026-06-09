@@ -59,6 +59,9 @@ def generate_robot_nodes(context):
                     "load_gripper": str(config["load_gripper"]),
                     "use_fake_hardware": str(config["use_fake_hardware"]),
                     "fake_sensor_commands": str(config["fake_sensor_commands"]),
+                    "controllers_config_file": str(
+                        config.get("controllers_config_file", "controllers.yaml")
+                    ),
                     "joint_sources": ",".join(config["joint_sources"]),
                     "joint_state_rate": str(config["joint_state_rate"]),
                 }.items(),
@@ -71,11 +74,13 @@ def generate_robot_nodes(context):
                 namespace=namespace,
                 arguments=["joint_impedance_controller", "--controller-manager-timeout", "30"],
                 parameters=[
-                    PathJoinSubstitution(
+                    str(config.get("controllers_config_file", "controllers.yaml"))
+                    if os.path.isabs(str(config.get("controllers_config_file", "controllers.yaml")))
+                    else PathJoinSubstitution(
                         [
                             FindPackageShare("franka_fr3_arm_controllers"),
                             "config",
-                            "controllers.yaml",
+                            str(config.get("controllers_config_file", "controllers.yaml")),
                         ]
                     )
                 ],
